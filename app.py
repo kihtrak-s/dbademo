@@ -3,10 +3,16 @@ import sql
 import config
 import sqlite3
 import os
-from routes import students_bp
+from routes.student import students_bp 
+from routes.teacher import teachers_bp  # Import the blueprints from routes
+from routes.attendance import attendance_bp  # Import the blueprints from routes
+from routes.subject import subjects_bp  # Import the blueprints from routes
 
 app = Flask(__name__)
 app.register_blueprint(students_bp)
+app.register_blueprint(teachers_bp)
+app.register_blueprint(attendance_bp)
+app.register_blueprint(subjects_bp)
 
 
 # Initialize the database
@@ -17,15 +23,22 @@ def init_db():
             cursor = conn.cursor()
             cursor.execute(sql.create_student_table)
             cursor.execute(sql.create_teacher_table)
+            cursor.execute(sql.create_staff_table)
+            cursor.execute(sql.create_class_table)
+            cursor.execute(sql.create_section_table)
+            cursor.execute(sql.create_attendance_table)
+            cursor.execute(sql.create_timetable_table)
             cursor.execute(sql.create_subject_table)
             cursor.execute(sql.create_exam_table)
             cursor.execute(sql.create_marks_table)
-            cursor.execute(sql.create_attendance_table)
+
             conn.commit()
 # Route to display welcome message at the root URL
 @app.route('/', methods=['GET'])
 def welcome():
-    return "Welcome to the Student Management System!"
+    html = config.get_homepage()
+    return html
+
 
 # # Route to fetch all items
 # @app.route('/items', methods=['GET'])

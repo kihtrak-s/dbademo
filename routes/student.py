@@ -21,12 +21,17 @@ def get_students():
 
 @students_bp.route(students_api,methods=['POST'])
 def add_student():
-    # data = request.json
-    # details = data.get('student_details')
-    details={'name':'Ram','gender':'male'}
+    data = request.json
+    column_order = ["Name", "DOB", "Gender", "AdmissionNo", "ClassID", "SectionID", "ParentInfo"]
+    details = tuple(data.get(col) for col in column_order)
+
     with sqlite3.connect(config.DATABASE) as conn:
         cursor = conn.cursor()
-        cursor.execute('INSERT INTO Student(name,gender) VALUES(?)', details)
+        cursor.execute('''
+                           INSERT INTO student (Name, DOB, Gender, AdmissionNo, ClassID, SectionID, ParentInfo) 
+                           VALUES (?, ?, ?, ?, ?, ?, ?)
+                           ''', details)
+        # cursor.execute('INSERT INTO Student(name,gender) VALUES(?)', details)
         conn.commit()
     return jsonify({'message': 'Item added successfully'}), 201
 
@@ -57,4 +62,24 @@ def delete_all_students():
         cursor.execute('DELETE FROM Student')
         conn.commit()
     return jsonify({'message': 'All students deleted successfully'}), 200
+@students_bp.route(students_api+"/count", methods=['GET'])
+def count_students():
+    with sqlite3.connect(config.DATABASE) as conn:
+        cursor = conn.cursor()
+        cursor.execute('SELECT COUNT(*) FROM Student')
+        count = cursor.fetchone()[0]
+
+    return jsonify({'count': count}), 200
+@students_bp.route(students_api+"/section/:id", methods=['GET'])
+def get_students_by_section(section_id):
+    with sqlite3.connect(config.DATABASE) as conn:
+        cursor = conn.cursor()
+        cursor.execute('SELECT * FROM Student WHERE SectionID = ?', (section_id,))
+        students = cursor.fetchall()
+
+    if students:
+        return jsonify({'students': students}), 200
+    else:
+        return jsonify({'message': 'No students found for this section'}), 404
+
     
